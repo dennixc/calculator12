@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式計算機</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .calculator {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .display {
+            background: #2d3748;
+            color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: right;
+            word-wrap: break-word;
+            min-height: 80px;
+        }
+
+        .previous-operand {
+            color: #a0aec0;
+            font-size: 18px;
+            min-height: 25px;
+        }
+
+        .current-operand {
+            color: #fff;
+            font-size: 32px;
+            font-weight: bold;
+            min-height: 40px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .operator {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .operator:hover {
+            background: #5a67d8;
+        }
+
+        .clear {
+            background: #fc8181;
+            color: #fff;
+        }
+
+        .clear:hover {
+            background: #f56565;
+        }
+
+        .delete {
+            background: #f6ad55;
+            color: #fff;
+        }
+
+        .delete:hover {
+            background: #ed8936;
+        }
+
+        .equals {
+            background: #48bb78;
+            color: #fff;
+            grid-column: span 2;
+        }
+
+        .equals:hover {
+            background: #38a169;
+        }
+
+        .zero {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 480px) {
+            .calculator {
+                padding: 20px;
+            }
+
+            button {
+                padding: 18px;
+                font-size: 18px;
+            }
+
+            .current-operand {
+                font-size: 28px;
+            }
+
+            .previous-operand {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div class="previous-operand" id="previousOperand"></div>
+            <div class="current-operand" id="currentOperand">0</div>
+        </div>
+        <div class="buttons">
+            <button class="clear" onclick="calculator.clear()">AC</button>
+            <button class="delete" onclick="calculator.delete()">DEL</button>
+            <button class="operator" onclick="calculator.chooseOperation('÷')">÷</button>
+            <button class="operator" onclick="calculator.chooseOperation('×')">×</button>
+            
+            <button onclick="calculator.appendNumber('7')">7</button>
+            <button onclick="calculator.appendNumber('8')">8</button>
+            <button onclick="calculator.appendNumber('9')">9</button>
+            <button class="operator" onclick="calculator.chooseOperation('-')">-</button>
+            
+            <button onclick="calculator.appendNumber('4')">4</button>
+            <button onclick="calculator.appendNumber('5')">5</button>
+            <button onclick="calculator.appendNumber('6')">6</button>
+            <button class="operator" onclick="calculator.chooseOperation('+')">+</button>
+            
+            <button onclick="calculator.appendNumber('1')">1</button>
+            <button onclick="calculator.appendNumber('2')">2</button>
+            <button onclick="calculator.appendNumber('3')">3</button>
+            <button class="operator" onclick="calculator.chooseOperation('%')">%</button>
+            
+            <button class="zero" onclick="calculator.appendNumber('0')">0</button>
+            <button onclick="calculator.appendNumber('.')">.</button>
+            <button class="equals" onclick="calculator.compute()">=</button>
+        </div>
+    </div>
+
+    <script>
+        class Calculator {
+            constructor(previousOperandElement, currentOperandElement) {
+                this.previousOperandElement = previousOperandElement;
+                this.currentOperandElement = currentOperandElement;
+                this.clear();
+            }
+
+            clear() {
+                this.currentOperand = '0';
+                this.previousOperand = '';
+                this.operation = undefined;
+                this.updateDisplay();
+            }
+
+            delete() {
+                if (this.currentOperand === '0') return;
+                this.currentOperand = this.currentOperand.toString().slice(0, -1);
+                if (this.currentOperand === '' || this.currentOperand === '-') {
+                    this.currentOperand = '0';
+                }
+                this.updateDisplay();
+            }
+
+            appendNumber(number) {
+                if (number === '.' && this.currentOperand.includes('.')) return;
+                if (this.currentOperand === '0' && number !== '.') {
+                    this.currentOperand = number;
+                } else {
+                    this.currentOperand = this.currentOperand.toString() + number.toString();
+                }
+                this.updateDisplay();
+            }
+
+            chooseOperation(operation) {
+                if (this.currentOperand === '') return;
+                if (this.previousOperand !== '') {
+                    this.compute();
+                }
+                this.operation = operation;
+                this.previousOperand = this.currentOperand;
+                this.currentOperand = '0';
+                this.updateDisplay();
+            }
+
+            compute() {
+                let computation;
+                const prev = parseFloat(this.previousOperand);
+                const current = parseFloat(this.currentOperand);
+                if (isNaN(prev) || isNaN(current)) return;
+
+                switch (this.operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '×':
+                        computation = prev * current;
+                        break;
+                    case '÷':
+                        computation = prev / current;
+                        break;
+                    case '%':
+                        computation = prev % current;
+                        break;
+                    default:
+                        return;
+                }
+
+                this.currentOperand = computation;
+                this.operation = undefined;
+                this.previousOperand = '';
+                this.updateDisplay();
+            }
+
+            getDisplayNumber(number) {
+                const stringNumber = number.toString();
+                const integerDigits = parseFloat(stringNumber.split('.')[0]);
+                const decimalDigits = stringNumber.split('.')[1];
+                let integerDisplay;
+                
+                if (isNaN(integerDigits)) {
+                    integerDisplay = '';
+                } else {
+                    integerDisplay = integerDigits.toLocaleString('zh-TW', {
+                        maximumFractionDigits: 0
+                    });
+                }
+                
+                if (decimalDigits != null) {
+                    return `${integerDisplay}.${decimalDigits}`;
+                } else {
+                    return integerDisplay;
+                }
+            }
+
+            updateDisplay() {
+                this.currentOperandElement.textContent = this.getDisplayNumber(this.currentOperand);
+                if (this.operation != null) {
+                    this.previousOperandElement.textContent = 
+                        `${this.getDisplayNumber(this.previousOperand)} ${this.operation}`;
+                } else {
+                    this.previousOperandElement.textContent = '';
+                }
+            }
+        }
+
+        const previousOperandElement = document.getElementById('previousOperand');
+        const currentOperandElement = document.getElementById('currentOperand');
+
+        const calculator = new Calculator(previousOperandElement, currentOperandElement);
+
+        // 鍵盤支援
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9' || e.key === '.') {
+                calculator.appendNumber(e.key);
+            }
+            if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+                const operation = e.key === '*' ? '×' : e.key === '/' ? '÷' : e.key;
+                calculator.chooseOperation(operation);
+            }
+            if (e.key === 'Enter' || e.key === '=') {
+                calculator.compute();
+            }
+            if (e.key === 'Backspace') {
+                calculator.delete();
+            }
+            if (e.key === 'Escape') {
+                calculator.clear();
+            }
+        });
+    </script>
+</body>
+</html>
